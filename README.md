@@ -1,77 +1,97 @@
-# PhotoPainter (B) 画像変換ツール
+# PhotoPainter (B) Image Converter
 
-PhotoPainter (B) 用の画像を変換するシンプルなコマンドラインツールです。一般的な画像形式から、PhotoPainter (B) で表示可能な6色 (黒, 白, 赤, 緑, 青, 黄) の24-bit BMP形式に変換します。
+A simple command-line tool to convert images for use with PhotoPainter (B). This tool converts common image formats to 24-bit BMP format with 6 colors (black, white, red, green, blue, yellow) compatible with PhotoPainter (B).
 
-## 機能
+## Features
 
-- 一般的な画像形式（JPG, PNG, GIF, BMP等）をサポート
-- Floyd-Steinbergディザリングアルゴリズムによる色変換
-- 800×480の解像度に自動調整
-- 縦長画像の自動回転（90度回転して適切な向きに調整）
-- 単一ファイルまたはディレクトリ内の複数ファイルの一括処理
+- Supports common image formats (JPG, PNG, GIF, BMP, etc.)
+- Floyd-Steinberg dithering algorithm for color conversion
+- Automatic resizing to 800×480 resolution
+- Automatic rotation of portrait images (90-degree rotation for proper orientation)
+- Batch processing of multiple files in a directory
+- Sequential file numbering in batch mode (0001_0001.bmp, 0001_0002.bmp, etc.)
 
-## 使用方法
+## Usage
 
 ```
-PhotoPainter (B) 画像変換ツール
-使用方法: photoconvert [オプション] 入力ファイル/ディレクトリ
+PhotoPainter (B) Image Converter
+Usage: photoconvert [options] input_file/directory
 
-オプション:
-  -o <dir>       出力先ディレクトリ（指定しない場合は入力と同じディレクトリ）
-  -batch         バッチモード（ディレクトリ内のすべての画像を処理）
-  -r <res>       解像度（800x480 または 480x800、デフォルト: 800x480）
-  -v             詳細なログ出力
-  -h             このヘルプメッセージを表示
+Options:
+  -o <dir>       Output directory (required for batch mode)
+  -batch         Batch mode (process all images in a directory)
+  -depth <n>     Maximum subdirectory exploration depth for batch mode (default: 3)
+  -r <res>       Resolution (800x480 or 480x800, default: 800x480)
+  -rotate=false  Disable automatic rotation of portrait images (default: enabled)
+  -v             Verbose logging
+  -h             Display this help message
 
-例:
-  単一ファイルの変換:
+Examples:
+  Single file conversion:
     photoconvert input.jpg
-  出力先ディレクトリ指定:
+  Specify output directory:
     photoconvert -o /path/to/output input.jpg
-  バッチ処理:
-    photoconvert -batch /path/to/images/
-  すべてのオプション:
-    photoconvert -batch -o /path/to/output -r 800x480 -v /path/to/images/
+  Batch processing:
+    photoconvert -batch -o /path/to/output /path/to/images/
+  Batch processing including subdirectories:
+    photoconvert -batch -depth 3 -o /path/to/output /path/to/images/
+  All options:
+    photoconvert -batch -o /path/to/output -depth 2 -r 800x480 -v /path/to/images/
 ```
 
-## インストール
+## Batch Processing Behavior
 
-リポジトリをクローンし、ビルドします：
+When using batch mode:
+1. All files in each directory are sorted alphabetically before processing
+2. Directories are assigned sequential numbers (0001, 0002, etc.)
+3. Files within each directory are numbered sequentially (0001, 0002, etc.)
+4. All output files are written to a single flat directory (specified by -o)
+5. Output filenames use the format: `DDDD_FFFF.bmp` where:
+   - `DDDD` is the directory sequence number
+   - `FFFF` is the file sequence number within that directory
+
+## Installation
+
+Clone the repository and build:
 
 ```bash
-git clone https://github.com/example/photopainter.git
-cd photopainter
-go build -o photoconvert ./cmd/photoconvert/
+git clone https://github.com/fuba/convert2photopainter_b.git
+cd convert2photopainter_b
+go build -o photoconvert ./cmd/convert2photopainter/
 ```
 
-## プロジェクト構造
+## Project Structure
 
 ```
 /convert2photopainter_b/
   ├── cmd/
-  │   └── photoconvert/
-  │       └── main.go            # コマンドラインインターフェース
+  │   └── convert2photopainter/
+  │       └── main.go            # Command-line interface
   ├── internal/
   │   ├── convert/
-  │   │   └── convert.go         # 画像変換処理
+  │   │   └── convert.go         # Image conversion processing
   │   ├── dither/
-  │   │   └── dither.go          # Floyd-Steinbergディザリング
+  │   │   └── dither.go          # Floyd-Steinberg dithering
   │   └── resize/
-  │       └── resize.go          # 画像リサイズ処理
-  ├── go.mod                     # 依存関係管理
-  └── README.md                  # プロジェクト説明
+  │       └── resize.go          # Image resizing processing
+  ├── go.mod                     # Dependency management
+  └── README.md                  # Project explanation
 ```
 
-## 処理の流れ
+## Process Flow
 
-1. 画像を読み込み
-2. 指定した解像度（デフォルト: 800×480）にリサイズ
-3. Floyd-Steinbergディザリングアルゴリズムを適用して6色に減色
-4. 24-bit BMP形式で保存
+1. Load the image
+2. Resize to the specified resolution (default: 800×480)
+3. Apply Floyd-Steinberg dithering algorithm to reduce to 6 colors
+4. Save as 24-bit BMP format
 
-## 注意事項
+## Notes
 
-- 出力画像の色数は PhotoPainter (B) の仕様に合わせて6色（黒, 白, 赤, 緑, 青, 黄）に制限されています
-- 色の変換にはFloyd-Steinbergディザリングを使用して、より自然な見た目を実現しています
-- 画像は自動的にリサイズされますが、元のアスペクト比と異なる場合はクロップされる場合があります
-- MACでTFカードを作成する場合、隠しファイルが生成される場合があるため、変換後にTFカードのルートディレクトリからfileList.txtとindex.txtを削除するとともに、picフォルダ内の隠しファイルも削除することをおすすめします
+- The output image color count is limited to 6 colors (black, white, red, green, blue, yellow) according to PhotoPainter (B) specifications
+- Floyd-Steinberg dithering is used for color conversion to achieve a more natural appearance
+- Images are automatically resized, but may be cropped if the aspect ratio differs from the target
+- When creating a TF card on a MAC, hidden files may be generated, so it is recommended to delete fileList.txt and index.txt from the root directory of the TF card after conversion, as well as hidden files in the pic folder
+
+## References
+
+- [PhotoPainter (B) Official Wiki](https://www.waveshare.com/wiki/PhotoPainter_(B))
